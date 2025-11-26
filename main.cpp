@@ -11,6 +11,7 @@
 #include <sched.h>
 #include <x86intrin.h>
 #include <unistd.h>
+#include <string.h>
 
 template <typename T, typename Alloc = std::allocator<T>>
 class spsc {
@@ -111,13 +112,19 @@ void pin_thread_to_core(int core_id) {
 	cpu_set_t cpuset;
 	CPU_ZERO(&cpuset);
 	CPU_SET(core_id, &cpuset);
-	pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+//	pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+
+int rc = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+if (rc != 0) std::cerr << "affinity failed: " << strerror(rc) << "\n";
 }
 
 void set_realtime() {
 	sched_param sch;
 	sch.sched_priority = 80;
-	pthread_setschedparam(pthread_self(), SCHED_FIFO, &sch);
+//	pthread_setschedparam(pthread_self(), SCHED_FIFO, &sch)
+int rc = pthread_setschedparam(pthread_self(), SCHED_FIFO, &sch);
+if (rc != 0) std::cerr << "setsched failed: " << strerror(rc) << "\n";
+;
 }
 
 inline uint64_t rdtsc_now() {
@@ -147,15 +154,18 @@ double cycles_to_ns(uint64_t cycles, double ghz) {
 }
 
 int main() {
-	const size_t n = 2000000;
+	const size_t warmup = 1000;
+	const size_t n = 2000000 + warmup;
 	spsc<uint64_t> q(1024);
 
-	std::vector<uint64_t> lat_cycles(n); // stores cycle
+	std::vector<uint64_t> lat_cycles(n);
 
 	auto t_start = std::chrono::steady_clock::now();
 
 	std::thread producer([&]() {
+		std::cerr << "[producer] pinning...\n";
 		pin_thread_to_core(0);
+		std::cerr << "[producer] realtime...\n";
 		set_realtime();
 
 		for(size_t i=0; i<n; i++) {
@@ -168,7 +178,9 @@ int main() {
 	});
 
 	std::thread consumer([&]() {
+		std::cerr<<"[consumer] pinning...\n";
 		pin_thread_to_core(1);
+		std::cerr<<"[consumer] realtime...\n";
 		set_realtime();
 
 		for(size_t i=0; i<n; i++) {
@@ -185,11 +197,14 @@ int main() {
 	consumer.join();
 
 	auto t_end = std::chrono::steady_clock::now();
-	std::sort(lat_cycles.begin(), lat_cycles.end());
+
+	std::vector<uint64_t> real_lat(lat_cycles.begin()+warmup, lat_cycles.end());
+
+	std::sort(real_lat.begin(), real_lat.end());
 
 	auto pct = [&](double p){
-		size_t idx = size_t(p * lat_cycles.size());
-		return lat_cycles[std::min(idx, lat_cycles.size() - 1)];
+		size_t idx = size_t(p * real_lat.size());
+		return real_lat[std::min(idx, real_lat.size() - 1)];
 	};
 
 	double ghz = calibrate_ghz();
@@ -205,12 +220,12 @@ int main() {
 	std::cout << "P90 : "  << to_ns(pct(0.90))  << " ns\n";
 	std::cout << "P99 : "  << to_ns(pct(0.99))  << " ns\n";
 	std::cout << "P999: "  << to_ns(pct(0.999)) << " ns\n";
-	std::cout << "Min : "  << to_ns(lat_cycles.front()) << " ns\n";
-	std::cout << "Max : "  << to_ns(lat_cycles.back())  << " ns\n";
+	std::cout << "Min : "  << to_ns(real_lat.front()) << " ns\n";
+	std::cout << "Max : "  << to_ns(real_lat.back())  << " ns\n";
 
 	double avg = 0;
-	for (auto v : lat_cycles) avg += v;
-	avg /= lat_cycles.size();
+	for (auto v : real_lat) avg += v;
+	avg /= real_lat.size();
 
 	std::cout << "Average latency: " << to_ns(avg) << " ns\n";
 
