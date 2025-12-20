@@ -1,12 +1,62 @@
-Detected CPU freq: 1.19052 GHz
-------- SPSC Ring Buffer Benchmark -------
-Total ops: 2001000
-P50 : 1865.58 ns
-P90 : 55103.8 ns
-P99 : 61047.5 ns
-P999: 75244.7 ns
-Min : 83.1572 ns
-Max : 80162.7 ns
-Average latency: 14917.1 ns
-Wall time: 0.0943592 s
-Throughput: 2.12062e+07 ops/sec
+---- 2 Producers and Consumers ----
+Producers: 2, Consumers: 2, Items/prod: 1000000, Queue sz: 1024
+Invariant TSC freq: 1.1904 GHz
+------- MPMC Ring Buffer Benchmark -------
+Total produced: 2000000
+Total consumed: 2000000
+---- Enqueue cost ----
+Samples: 2000000 (filtered: 1999914)
+---- Enqueue cost ----
+P50 : 24.3616 ns
+P90 : 56.2836 ns
+P99 : 91.5659 ns
+P99.9 : 168.011 ns
+P99.99: 262.097 ns
+Min : 15.121 ns
+Max : 303642 ns
+Avg (filtered): 33.6021 ns
+---- Dequeue cost ----
+Samples: 2000000 (filtered: 1999852)
+---- Dequeue cost ----
+P50 : 21.0013 ns
+P90 : 35.2823 ns
+P99 : 57.1237 ns
+P99.9 : 81.4852 ns
+P99.99: 217.574 ns
+Min : 15.121 ns
+Max : 814797 ns
+Avg (filtered): 23.5215 ns
+Wall time: 0.169708 s
+Throughput: 1.1785e+07 ops/sec
+
+---- Single Producer and Consumer ----
+Producers: 1, Consumers: 1, Items/prod: 1000000, Queue sz: 1024
+Invariant TSC freq: 1.1904 GHz
+------- MPMC Ring Buffer Benchmark -------
+Total produced: 1000000
+Total consumed: 1000000
+---- Enqueue cost ----
+Samples: 1000000 (filtered: 999990)
+---- Enqueue cost ----
+P50 : 24.3616 ns
+P90 : 26.0417 ns
+P99 : 27.7218 ns
+P99.9 : 31.922 ns
+P99.99: 62.164 ns
+Min : 15.121 ns
+Max : 58838.2 ns
+Avg (filtered): 23.5215 ns
+---- Dequeue cost ----
+Samples: 1000000 (filtered: 999990)
+---- Dequeue cost ----
+P50 : 19.3212 ns
+P90 : 21.0013 ns
+P99 : 29.4019 ns
+P99.9 : 68.8844 ns
+P99.99: 112.567 ns
+Min : 15.121 ns
+Max : 29335.5 ns
+Avg (filtered): 19.3212 ns
+Wall time: 0.154112 s
+Throughput: 6.4888e+06 ops/sec
+
