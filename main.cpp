@@ -361,18 +361,18 @@ int main() {
 
     auto report = [&](const char* name, std::vector<uint64_t>& v) {
 	    std::sort(v.begin(), v.end());
-	    auto it = std::partition_point(v.begin(), v.end(), 
-                                   [](uint64_t x) { return x < 1200; }); // ~1000ns
-	    size_t filtered_count = std::distance(v.begin(), it);
+//	    auto it = std::partition_point(v.begin(), v.end(), 
+//                                   [](uint64_t x) { return x < 1200; }); // ~1000ns
+//	    size_t filtered_count = std::distance(v.begin(), it);
     
     	    std::cout << "---- " << name << " ----\n";
-    	    std::cout << "Samples: " << v.size() << " (filtered: " << filtered_count << ")\n";
+    	    std::cout << "Samples: " << v.size() <<"\n";
 	    auto pct = [&](double p) {
 		size_t idx = size_t(p * v.size());
 		return v[std::min(idx, v.size() - 1)];
 	    };
 
-	    std::cout << "---- " << name << " ----\n";
+//	    std::cout << "---- " << name << " ----\n";
 	    std::cout << "P50 : "  << cycles_to_ns(pct(0.50), ghz) << " ns\n";
 	    std::cout << "P90 : "  << cycles_to_ns(pct(0.90), ghz) << " ns\n";
 	    std::cout << "P99 : "  << cycles_to_ns(pct(0.99), ghz) << " ns\n";
@@ -381,11 +381,11 @@ int main() {
 	    std::cout << "Min : "  << cycles_to_ns(v.front(), ghz) << " ns\n";
 	    std::cout << "Max : "  << cycles_to_ns(v.back(), ghz) << " ns\n";
 
-	    double sum = 0;
-    	    for (size_t i = 0; i < filtered_count; ++i) {
-        	sum += v[i];
-    	    }
-    	    std::cout << "Avg (filtered): " << cycles_to_ns(sum/filtered_count, ghz) << " ns\n";
+//	    double sum = 0;
+//    	    for (size_t i = 0; i < filtered_count; ++i) {
+//        	sum += v[i];
+//    	    }
+//    	    std::cout << "Avg (filtered): " << cycles_to_ns(sum/filtered_count, ghz) << " ns\n";
     };
 
     report("Enqueue cost", all_prod);
